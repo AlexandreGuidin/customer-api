@@ -15,7 +15,7 @@
       (assoc-in [:headers "Content-Type"] json-type)))
 
 (def transform-body
-  {:name ::coerce-body
+  {:name ::transform-body
    :leave
    (fn [context]
      (if (get-in context [:response :headers "Content-Type"])
