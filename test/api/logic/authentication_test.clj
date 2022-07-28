@@ -1,7 +1,8 @@
 (ns api.logic.authentication-test
   (:require [clojure.test :refer :all]
             [api.logic.authentication :refer :all]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (clojure.lang ExceptionInfo)))
 
 
 (deftest decode-auth-header-test
@@ -11,12 +12,12 @@
     (is (not (str/blank? (decode (.getBytes "xxxxxx")))))
     (is (= "" (decode (.getBytes "xx"))))
     (is (= "" (decode (.getBytes ""))))
-    (is (thrown? NegativeArraySizeException (decode (.getBytes "xx=")))))
+    (is (thrown? ExceptionInfo (decode (.getBytes "xx=")))))
 
   (testing "Test decoding a base64 header"
     (is (= "admin:admin-pwd" (decode-auth-header "YWRtaW46YWRtaW4tcHdkCg==")))
     (is (= "admin:adminwrong" (decode-auth-header "YWRtaW46YWRtaW53cm9uZwo=")))
-    (is (thrown-with-msg? RuntimeException #"Given token was not a basic auth header" (decode-auth-header "xxxxxx"))))
+    (is (thrown-with-msg? ExceptionInfo #"Given token was not a basic auth header" (decode-auth-header "xxxxxx"))))
 
   (testing "Extract user and pwd from decoded header"
     (is (= ["admin" "admin-pwd"] (extract-user-and-pwd "admin:admin-pwd")))
@@ -34,5 +35,6 @@
 
   (testing "Generate jwt from basic auth header"
     (is (not (empty? (get (basic-auth "YWRtaW46YWRtaW4tcHdkCg==") :token))))
-    (is (= 900 (get (basic-auth "YWRtaW46YWRtaW4tcHdkCg==") :exp))))
+    (is (= 900 (get (basic-auth "YWRtaW46YWRtaW4tcHdkCg==") :exp)))
+    (is (thrown-with-msg? ExceptionInfo #"Given user was not authorized" (basic-auth "YWRtaW46YWRtaW53cm9uZwo="))))
   )
