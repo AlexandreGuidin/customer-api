@@ -5,7 +5,7 @@
   (:import (clojure.lang ExceptionInfo)))
 
 
-(deftest decode-auth-header-test
+(deftest authentication-test
   (testing "Decode a base64 string"
     (is (= "admin:admin-pwd\n" (decode (.getBytes "YWRtaW46YWRtaW4tcHdkCg=="))))
     (is (= "admin:adminwrong\n" (decode (.getBytes "YWRtaW46YWRtaW53cm9uZwo="))))

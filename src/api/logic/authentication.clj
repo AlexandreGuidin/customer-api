@@ -2,6 +2,7 @@
   (:require [api.models.jwt :as jwtm]
             [clojure.data.codec.base64 :as b64]
             [clojure.string :as str]
+            [clj-time.core :as time]
             [buddy.sign.jwt :as jwt]))
 
 (def expected-users {"admin" "admin-pwd", "user" "user-pwd"})
@@ -37,7 +38,7 @@
 
 (defn generate-jwt-token
   []
-  (jwt/sign {} "secret"))
+  (jwt/sign {:exp (time/plus (time/now) (time/minutes 15))} "secret"))
 
 (defn basic-auth [basic-header]
   (as-> basic-header bind
