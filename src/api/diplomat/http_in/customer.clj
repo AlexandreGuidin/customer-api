@@ -1,10 +1,10 @@
 (ns api.diplomat.http-in.customer
-  (:require [api.logic.customer :as logic.customer]))
+  (:require [api.logic.customer :as logic.customer])
+  (:import (clojure.lang ExceptionInfo)))
 
 
 (defn create-customer
   [{:keys [headers params json-params path-params] :as request}]
-
   {:status 200 :body (logic.customer/save-customer json-params)})
 
 (defn find-all [_]
@@ -18,5 +18,14 @@
       ))
   )
 
-(defn disable-customer [request]
-  {:status 200 :body "{}"})
+(defn disable-customer [{:keys [headers params json-params path-params] :as request}]
+  (try (let [body (logic.customer/update-status-by-id (:id path-params) "disabled")]
+         {:status 200 :body body}
+         )
+       (catch ExceptionInfo e
+         (if (= (:type e) :not-found-customer)
+           {:status 404}
+           {:status 500}
+           )
+         ))
+  )

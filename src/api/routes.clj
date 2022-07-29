@@ -18,6 +18,6 @@
       ["/customer" :post (conj private-routes-interceptors http.in.customer/create-customer) :route-name :customer-create]
       ["/customer" :get (conj private-routes-interceptors http.in.customer/find-all) :route-name :customer-find-all]
       ["/customer/:id" :get (conj private-routes-interceptors http.in.customer/find-by-id) :route-name :customer-find-by-id]
-      ["/customer/disable" :post (conj private-routes-interceptors http.in.customer/disable-customer) :route-name :customer-disable]
+      ["/customer/:id/disable" :post (conj private-routes-interceptors http.in.customer/disable-customer) :route-name :customer-disable]
       ["/authentication" :post (conj common-interceptors http.in.authentication/post-authentication) :route-name :authorization]
       }))

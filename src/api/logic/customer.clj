@@ -24,3 +24,10 @@
       (first)
       (adapter/entity->response)
       ))
+
+(defn update-status-by-id
+  [id status]
+  (-> (java.util.UUID/fromString id)
+      (db/update-status ,,, status)
+      (adapter/entity->response)
+      ))
