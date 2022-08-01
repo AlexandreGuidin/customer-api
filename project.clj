@@ -12,5 +12,6 @@
                  [io.pedestal/pedestal.jetty "0.5.7"]
                  [org.slf4j/slf4j-simple  "1.7.28"]
                  [buddy/buddy-sign "3.4.333"]
+                 [prismatic/schema "1.3.0"]
                  ]
   :repl-options {:init-ns customer-api.main})
