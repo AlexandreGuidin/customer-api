@@ -1,7 +1,10 @@
 (ns api.adapters.customer
   (:require
+    [schema.core :as s :include-macros true]
     [clj-time.core :as time]
-    [clj-time.format :as fmt]))
+    [clj-time.format :as fmt]
+    )
+  (:import (api.models.customer CustomerEntity)))
 
 (defn entity->response
   [{:keys [id, name, lastName, status, birthDate, createdAt]}]
@@ -15,7 +18,7 @@
    })
 
 
-(defn request->entity
+(s/defn request->entity :- CustomerEntity
   [{:keys [name, lastName, birthDate]}]
   {
    :id        (java.util.UUID/randomUUID)
