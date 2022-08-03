@@ -5,18 +5,18 @@
 
 (defn create-customer
   [{:keys [headers params json-params path-params] :as request}]
-  {:status 200 :body (logic.customer/save-customer json-params)})
+  (if-let [response (logic.customer/save-customer json-params)]
+    {:status 200 :body response}
+    {:status 400}
+    ))
 
 (defn find-all [_]
   {:status 200 :body (logic.customer/find-all)})
 
 (defn find-by-id [{:keys [headers params json-params path-params] :as request}]
-  (let [user (logic.customer/find-by-id (:id path-params))]
-    (if (nil? user)
-      {:status 404}
-      {:status 200 :body user}
-      ))
-  )
+  (if-let [user (logic.customer/find-by-id (:id path-params))]
+    {:status 200 :body user}
+    {:status 404}))
 
 (defn disable-customer [{:keys [headers params json-params path-params] :as request}]
   (try (let [body (logic.customer/update-status-by-id (:id path-params) "disabled")]
