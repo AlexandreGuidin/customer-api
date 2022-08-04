@@ -1,8 +1,7 @@
 (ns api.logic.schema
   (:require
     [schema.core :as s :include-macros true]
-    [schema.utils :as sutils]
-    )
+    [schema.utils :as sutils])
   (:import (clojure.lang ExceptionInfo)))
 
 (defn extract-error
@@ -24,16 +23,11 @@
   [schema values]
   (try (s/validate schema values)
        (catch ExceptionInfo ex
-         (let [
-               data (ex-data ex)
-               error (:error data)
-               value (:value data)
-               error-str (if (map? error) (map validation-error-as-string error) (str (extract-error error)))
-               validation-error {:error error-str :value value}]
+         (let [data (ex-data ex)
+               error-data (:error data)
+               errors (if (map? error-data) (map validation-error-as-string error-data) (extract-error error-data))]
 
-           ;(println (sutils/validation-error-explain error) )
-           (println error-str)
-           error-str
+           (throw (ex-info "Schema is not valid" {:errors errors :type "validation-error"}))
            )
          )))
 

@@ -9,23 +9,19 @@
 (defn is-valid-zoned-datetime?
   [dateTime]
   (try (not (nil? (ZonedDateTime/parse dateTime (DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
-       (catch Exception ex
-         (println "Invalid date with error" (.getMessage ex))
-         'false)))
+       (catch Exception _ false)))
 
 (defn is-valid-localdate?
   [dateTime]
   (try (not (nil? (LocalDate/parse dateTime (DateTimeFormatter/ISO_DATE))))
-       (catch Exception ex
-         (println "Invalid date with error" (.getMessage ex))
-         'false)))
+       (catch Exception _ false)))
 
-(def ZonedDateTimeSchema (s/pred is-valid-zoned-datetime? '"format should be '2011-12-03T10:15:30+01:00'"))
-(def LocalDateSchema (s/pred is-valid-localdate? '"format should be '2011-12-03'"))
+(def ZonedDateTimeSchema (s/pred is-valid-zoned-datetime? 'not-in-format-2011-12-03T10:15:30+01:00))
+(def LocalDateSchema (s/pred is-valid-localdate? 'not-in-format-2011-12-03))
 
 (def all-status #{:new :disabled})
 ;(s/defschema Status (apply s/enum all-status))
-(def Status (s/pred #(contains? all-status %) (str "value is not in " (list all-status))))
+(def Status (s/pred #(contains? all-status %) 'wrong-status-value))
 
 (s/defschema CustomerEntity
   {:id        s/Uuid
