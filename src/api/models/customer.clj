@@ -1,8 +1,5 @@
 (ns api.models.customer
-  (:require [schema.core :as s :include-macros true]
-            [schema.spec.core :as spec :include-macros true]
-            [schema.spec.leaf :as leaf :include-macros true]
-            [clojure.string :as str])
+  (:require [schema.core :as s :include-macros true])
   (:import (java.time.format DateTimeFormatter)
            (java.time ZonedDateTime LocalDate)))
 
@@ -20,11 +17,19 @@
 (def LocalDateSchema (s/pred is-valid-localdate? 'not-in-format-2011-12-03))
 
 (def all-status #{:new :disabled})
-;(s/defschema Status (apply s/enum all-status))
 (def Status (s/pred #(contains? all-status %) 'wrong-status-value))
 
+(defn is-valid-uuid?
+  [uuid]
+  (try (not (nil? (->> uuid
+                       (java.util.UUID/fromString)
+                       (s/validate s/Uuid))))
+       (catch Exception _ false)))
+
+(def UUID (s/pred is-valid-uuid? 'is-not-a-valid-uuid))
+
 (s/defschema CustomerEntity
-  {:id        s/Uuid
+  {:id        UUID
    :name      s/Str
    :lastName  s/Str
    :status    Status
@@ -35,7 +40,7 @@
 (s/defschema CustomerRequest
   {:name      s/Str
    :lastName  s/Str
-   :birthDate s/Str
+   :birthDate LocalDateSchema
    })
 
 (s/defschema CustomerResponse

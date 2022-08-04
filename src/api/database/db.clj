@@ -21,6 +21,6 @@
 (defn update-status
   [id status]
   (let [index (first (keep-indexed #(if (= id (:id %2)) %1) @customer-table))]
-    (when (nil? index) (throw (ex-info "Could not find customer" {:type :not-found-customer})))
+    (when (nil? index) (throw (ex-info "entity not found" {:type :not-found-entity})))
     (swap! customer-table update-in [index :status] (fn [_] status))
     (@customer-table index)))

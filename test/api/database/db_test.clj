@@ -16,11 +16,11 @@
 
 (use-fixtures :each clear-db)
 
-(def mock-user {:id (java.util.UUID/randomUUID) :name "test" :lastName "test-lastname" :status "new" :birthDate "01/01/2000" :createdAt (time/local-date-time 2010 1 30 0 0 0 0)})
+(def mock-user {:id (random-uuid) :name "test" :lastName "test-lastname" :status "new" :birthDate "01/01/2000" :createdAt (time/local-date-time 2010 1 30 0 0 0 0)})
 (def disabled-user (update mock-user :status (fn [_] "disabled")))
 (defn other-user
   []
-  (update mock-user :id (fn [_] (java.util.UUID/randomUUID))))
+  (update mock-user :id (fn [_] (random-uuid))))
 
 (deftest find-all-test
   (testing "Test find all empty"
@@ -54,6 +54,7 @@
   (testing "Test find by id"
     (db/create-new mock-user)
     (is (= [mock-user] (db/find-by-id (:id mock-user))))
+    (is (= [] (db/find-by-id (.toString (:id mock-user)))))
     (is (= [] (db/find-by-id "123")))
     (nil? (db/find-by-id "123")))
 

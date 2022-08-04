@@ -4,8 +4,9 @@
     [schema.core :as s :include-macros true]
     [api.adapters.customer :as adapter]
     [api.models.customer :as model.customer]
+    [api.logic.schema :as logic.s]
     )
-  (:import (clojure.lang ExceptionInfo)))
+  (:import (java.util UUID)))
 
 (s/defn find-all :- [model.customer/CustomerResponse]
   []
@@ -13,29 +14,28 @@
 
 (s/defn save-customer :- model.customer/CustomerResponse
   [request :- model.customer/CustomerRequest]
-  (try
-    (-> (s/validate model.customer/CustomerRequest request)
-        (adapter/request->entity)
-        (db/create-new)
-        (last)
-        (adapter/entity->response)
-        )
-    (catch ExceptionInfo e
-      (println "Failure while validating request" (.getMessage e))
-      nil
-      )))
-
-(s/defn find-by-id :- model.customer/CustomerResponse
-  [id :- s/Uuid]
-  (-> (java.util.UUID/fromString id)
-      (db/find-by-id)
-      (first)
+  (-> (s/validate model.customer/CustomerRequest request)
+      (adapter/request->entity)
+      (db/create-new)
+      (last)
       (adapter/entity->response)
       ))
 
+(s/defn find-by-id :- model.customer/CustomerResponse
+  [id :- s/Uuid]
+  (if-some [customer-entity (-> (s/validate model.customer/UUID id)
+                                (UUID/fromString)
+                                (db/find-by-id)
+                                (first))]
+    (adapter/entity->response customer-entity)
+    (throw (ex-info "entity not found" {:type :not-found-entity}))
+    )
+  )
+
 (s/defn update-status-by-id :- model.customer/CustomerResponse
   [id :- s/Uuid status :- model.customer/Status]
-  (-> (java.util.UUID/fromString id)
+  (-> (s/validate model.customer/UUID id)
+      (UUID/fromString)
       (db/update-status,,, status)
       (adapter/entity->response)
       ))

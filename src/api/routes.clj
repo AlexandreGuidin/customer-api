@@ -3,14 +3,14 @@
             [io.pedestal.http.route :as route]
             [api.diplomat.http-in.authentication :as http.in.authentication]
             [api.diplomat.http-in.customer :as http.in.customer]
-            [api.interceptors.auth :as ai]
+            [api.interceptors.auth :as interceptor.auth]
+            [api.interceptors.error :as interceptor.error]
             [io.pedestal.http.body-params :as body-params]))
 
-
-(def common-interceptors [ji/transform-body ji/content-interceptor (body-params/body-params)])
+(def common-interceptors [interceptor.error/interceptor ji/transform-body ji/content-interceptor (body-params/body-params)])
 
 (def private-routes-interceptors
-  (conj common-interceptors ai/auth-interceptor))
+  (conj common-interceptors interceptor.auth/interceptor))
 
 (def routes
   (route/expand-routes

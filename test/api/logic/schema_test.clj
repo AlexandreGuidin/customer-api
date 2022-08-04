@@ -1,12 +1,13 @@
 (ns api.logic.schema-test
   (:require
-    [clojure.test :as t :refer :all]
+    [clojure.test :refer :all]
     [api.logic.schema :as logic.s]
     [api.models.customer :as customer]
-    [schema.core :as s]))
+    [schema.core :as s])
+  (:import (clojure.lang ExceptionInfo)))
 
 
-(def valid-customer {:id        #uuid "65ae7286-9879-43f5-b2cc-2d5f65f660da"
+(def valid-customer {:id        "65ae7286-9879-43f5-b2cc-2d5f65f660da"
                      :name      "name"
                      :lastName  "last name"
                      :status    :new
@@ -20,48 +21,36 @@
                        :birthDate "20111203"
                        :createdAt "2011-12-03T10:15:30+01:00"})
 
-(def invalid-customer-error '({:id "instance? java.util.UUID"} {:birthDate "not-in-format-2011-12-03"}))
+(def invalid-customer-error {:errors [{:id "is-not-a-valid-uuid"} {:birthDate "not-in-format-2011-12-03"}]})
 
-(defmethod t/assert-expr 'thrown-with-data? [msg form]
-  (let [data (second form)
-        body (nthnext form 2)]
-    `(try ~@body
-          (do-report {:type     :fail, :message ~msg,
-                      :expected '~form, :actual nil})
-          (catch clojure.lang.ExceptionInfo e#
-            (let [expected# ~data
-                  actual# (ex-data e#)]
-              (if (= expected# actual#)
-                (do-report {:type     :pass, :message ~msg,
-                            :expected expected#, :actual actual#})
-                (do-report {:type     :fail, :message ~msg,
-                            :expected expected#, :actual actual#})))
-            e#))))
+
+(defn validate-and-extract
+  [schema data]
+  (try
+    (s/validate schema data)
+    (catch ExceptionInfo ex (logic.s/extract-error-body ex))))
 
 (deftest validate-schema-test
-  (testing "Testing validation method"
+  (testing "Testing extracting full body error"
 
-    (is (= "abc" (logic.s/validate-schema s/Str "abc")))
-    (is (thrown-with-data? {:errors "instance? java.lang.String" :type "validation-error"} (logic.s/validate-schema s/Str 123)))
+    (is (= "abc" (validate-and-extract s/Str "abc")))
+    (is (= {:errors ["instance? java.lang.String"]} (validate-and-extract s/Str 123)))
 
-    (is (= 123 (logic.s/validate-schema s/Num 123)))
-    (is (thrown-with-data? {:errors "instance? java.lang.Number" :type "validation-error"} (logic.s/validate-schema s/Num "123")))
+    (is (= 123 (validate-and-extract s/Num 123)))
+    (is (= {:errors ["instance? java.lang.Number"]} (validate-and-extract s/Num "123")))
 
-    (is (= :new (logic.s/validate-schema customer/Status :new)))
-    (is (thrown-with-data? {:errors "wrong-status-value" :type "validation-error"} (logic.s/validate-schema customer/Status :xxx)))
+    (is (= :new (validate-and-extract customer/Status :new)))
+    (is (= {:errors ["wrong-status-value"]} (validate-and-extract customer/Status :xxx)))
 
+    (is (= {:errors ["not-in-format-2011-12-03"]} (validate-and-extract customer/LocalDateSchema "20111203")))
+    (is (= {:errors ["not-in-format-2011-12-03"]} (validate-and-extract customer/LocalDateSchema "")))
+    (is (= {:errors ["not-in-format-2011-12-03"]} (validate-and-extract customer/LocalDateSchema nil)))
 
-    (is (thrown-with-data? {:errors "not-in-format-2011-12-03" :type "validation-error"} (logic.s/validate-schema customer/LocalDateSchema "20111203")))
-    (is (thrown-with-data? {:errors "not-in-format-2011-12-03" :type "validation-error"} (logic.s/validate-schema customer/LocalDateSchema "")))
-    (is (thrown-with-data? {:errors "not-in-format-2011-12-03" :type "validation-error"} (logic.s/validate-schema customer/LocalDateSchema nil)))
+    (is (= {:errors ["not-in-format-2011-12-03T10:15:30+01:00"]} (validate-and-extract customer/ZonedDateTimeSchema "20111203T10:15:30+01:00")))
+    (is (= {:errors ["not-in-format-2011-12-03T10:15:30+01:00"]} (validate-and-extract customer/ZonedDateTimeSchema "")))
+    (is (= {:errors ["not-in-format-2011-12-03T10:15:30+01:00"]} (validate-and-extract customer/ZonedDateTimeSchema nil)))
 
-
-    (is (thrown-with-data? {:errors "not-in-format-2011-12-03T10:15:30+01:00" :type "validation-error"} (logic.s/validate-schema customer/ZonedDateTimeSchema "20111203T10:15:30+01:00")))
-    (is (thrown-with-data? {:errors "not-in-format-2011-12-03T10:15:30+01:00" :type "validation-error"} (logic.s/validate-schema customer/ZonedDateTimeSchema "")))
-    (is (thrown-with-data? {:errors "not-in-format-2011-12-03T10:15:30+01:00" :type "validation-error"} (logic.s/validate-schema customer/ZonedDateTimeSchema nil)))
-
-
-    (is (= valid-customer (logic.s/validate-schema customer/CustomerEntity valid-customer)))
-    (is (thrown-with-data? {:errors invalid-customer-error :type "validation-error"} (logic.s/validate-schema customer/CustomerEntity invalid-customer)))
+    (is (= valid-customer (validate-and-extract customer/CustomerEntity valid-customer)))
+    (is (= invalid-customer-error (validate-and-extract customer/CustomerEntity invalid-customer)))
     )
   )

@@ -15,7 +15,6 @@
           )
         ))
 
-
 (defn apply-unauthorized
   [context] (assoc context :response {:status 401 :headers {}}))
 
@@ -29,6 +28,6 @@
 
 
 
-(def auth-interceptor
+(def interceptor
   {:name  ::auth-interceptor
    :enter (fn [context] (authorization-interceptor context))})

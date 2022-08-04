@@ -1,33 +1,46 @@
 (ns api.logic.schema
   (:require
     [schema.core :as s :include-macros true]
-    [schema.utils :as sutils])
+    [schema.utils :as sutils]
+    [clojure.string :as str])
   (:import (clojure.lang ExceptionInfo)))
 
-(defn extract-error
+(defn extract-error-with-regex
   [error]
   (->> error
-       (sutils/validation-error-explain)
        (str)
        (re-matcher #"\(not \(([^)]+)( [\D\d]+)\)\)",,,)
        (re-find)
        (second)
-       )
+       ))
+
+(defn extract-single-error
+  [error]
+  (if (= (type error) schema.utils.ValidationError)
+    (let [error-explained (sutils/validation-error-explain error)]
+      (cond
+        (str/includes? error-explained "not") (extract-error-with-regex error-explained)
+        :else error-explained
+        )
+      )
+    error
+    )
   )
 
-(defn validation-error-as-string
+(defn extract-errors-from-map
   [[key value]]
-  {key (extract-error value)})
+  {key (extract-single-error value)})
 
-(defn validate-schema
-  [schema values]
-  (try (s/validate schema values)
-       (catch ExceptionInfo ex
-         (let [data (ex-data ex)
-               error-data (:error data)
-               errors (if (map? error-data) (map validation-error-as-string error-data) (extract-error error-data))]
+(defn extract-errors
+  [error-data]
+  (if (map? error-data)
+    (vec (map extract-errors-from-map error-data))
+    [(extract-single-error error-data)]))
 
-           (throw (ex-info "Schema is not valid" {:errors errors :type "validation-error"}))
-           )
-         )))
-
+(s/defn extract-error-body
+  [ex :- ExceptionInfo]
+  {:errors (-> ex
+               (ex-data)
+               (:error)
+               (extract-errors)
+               )})

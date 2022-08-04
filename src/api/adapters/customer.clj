@@ -1,31 +1,30 @@
 (ns api.adapters.customer
   (:require
     [schema.core :as s :include-macros true]
-    [clj-time.core :as time]
-    [clj-time.format :as fmt]
     [api.models.customer :as model.customer]
     )
-  )
+  (:import (java.time ZonedDateTime)
+           (java.time.format DateTimeFormatter)))
 
-(defn entity->response
-  [{:keys [id, name, lastName, status, birthDate, createdAt]}]
+(s/defn entity->response :- model.customer/CustomerResponse
+  [{:keys [id, name, lastName, status, birthDate, createdAt] :as entity}]
   {
    :id        id
    :name      name
    :lastName  lastName
    :status    status
    :birthDate birthDate
-   :createdAt (fmt/unparse (:basic-ordinal-date-time fmt/formatters) createdAt)
+   :createdAt (.format createdAt (DateTimeFormatter/ISO_OFFSET_DATE_TIME))
    })
 
 
 (s/defn request->entity :- model.customer/CustomerEntity
-  [{:keys [name, lastName, birthDate]}]
+  [{:keys [name, lastName, birthDate] :as request}]
   {
-   :id        (java.util.UUID/randomUUID)
+   :id        (random-uuid)
    :name      name
    :lastName  lastName
-   :status    "new"
+   :status    :new
    :birthDate birthDate
-   :createdAt (time/now)
+   :createdAt (ZonedDateTime/now)
    })
