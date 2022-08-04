@@ -64,6 +64,6 @@
   (testing "Test update status by id"
     (db/create-new mock-user)
     (is (= disabled-user (db/update-status (:id mock-user) "disabled")))
-    (is (thrown-with-msg? ExceptionInfo #"Could not find customer" (db/update-status (:id (other-user)) "disabled")))
+    (is (thrown-with-msg? ExceptionInfo #"entity not found" (db/update-status (:id (other-user)) "disabled")))
     )
   )

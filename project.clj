@@ -14,4 +14,5 @@
                  [buddy/buddy-sign "3.4.333"]
                  [prismatic/schema "1.3.0"]
                  ]
+  :main ^{:skip-aot false} api.main
   :repl-options {:init-ns customer-api.main})
